@@ -34,22 +34,33 @@ class Game():
 		pass
 
 	def start(self):
+		self.guessList = list(self.words.keys())
+		random.shuffle(self.guessList)
 		self.newWord()
 
 	def newWord(self):
-		self.initial = "%c" % (64+random.randint(1, len(self.words)))
+		if len(self.guessList) == 0:
+			return False
+		self.initial = self.guessList[0].upper(); del self.guessList[0]
 		self.validWords = self.words[self.initial.lower()]
 		self.inputstring = ""
 		self.time_max = 10
 		self.time_remaining = self.time_max
 		self.time_start = time.time()
 		self.started = True
+		return True
 
-	def getSolution(self):
+	def getSolution(self, failed=False):
 		self.time_max = float("nan")
 		self.time_start = float("nan")
 		self.time_remaining = float("nan")
 		self.started = False
+
+		if failed:
+			self.guessList.insert(3, self.initial)
+			if len(self.guessList[-1]) > 1 and self.guessList[-1] != self.initial:
+				self.guessList.insert(-1, self.initial)
+
 		if type(self.validWords) is str:
 			return self.validWords
 		return self.validWords[0]
@@ -151,10 +162,16 @@ class GUI(QWidget):
 
 	def pauseTimerTimeout(self):
 		self.pauseTimer.stop()
-		self.game.newWord()
-		self.text.setText(self.game.getWhatToDisplay())
-		self.refreshTimer.start(100)
-		self.blinkingState = False
+		self.progressbar.setValue(0)
+		if self.game.newWord():
+			self.text.setText(self.game.getWhatToDisplay())
+			self.refreshTimer.start(100)
+			self.blinkingState = False
+		else:
+			self.text.setText("Finished!")
+			self.pushButton.setDisabled(False)
+			self.pushButton.setVisible(True)
+			self.progressbar.setVisible(False)
 		self.text.setStyleSheet("");
 
 	def refreshTimerTimeout(self):
@@ -168,7 +185,7 @@ class GUI(QWidget):
 
 		if remainingTime <= 0:
 			self.refreshTimer.stop()
-			self.text.setText(self.game.getSolution())
+			self.text.setText(self.game.getSolution(failed=True))
 			self.pauseTimer.start(2000)
 			self.text.setStyleSheet("QLabel { color: red; }");
 		elif remainingTime < 1:
