@@ -24,6 +24,8 @@ class Game():
          'j':("Juliett", "Juliet"), 'k':"Kilo", 'l':"Lima", 'm':"Mike", 'n':"November", 'o':"Oscar", 'p':"Papa", 'q':"Quebec", 'r':"Romeo",
          's':"Sierra", 't':"Tango", 'u':"Uniform", 'v':"Victor", 'w':("Whiskey", "Whisky"), 'x':"Xray", 'y':"Yankee", 'z':("Zulu", "Zoulou")}
 
+	grantedTimeByLevels = [10, 5, 3, 2]
+
 	def __init__(self):
 		self.initial = ""
 		self.inputstring = ""
@@ -31,7 +33,7 @@ class Game():
 		self.time_max = float("nan")
 		self.time_start = float("nan")
 		self.time_remaining = float("nan")
-		pass
+		self.level = 0
 
 	def start(self):
 		self.guessList = list(self.words.keys())
@@ -44,7 +46,7 @@ class Game():
 		self.initial = self.guessList[0].upper(); del self.guessList[0]
 		self.validWords = self.words[self.initial.lower()]
 		self.inputstring = ""
-		self.time_max = 10
+		self.time_max = self.grantedTimeByLevels[self.level]
 		self.time_remaining = self.time_max
 		self.time_start = time.time()
 		self.started = True
@@ -145,6 +147,9 @@ class GUI(QWidget):
 		self.refreshTimer = QTimer()
 		self.refreshTimer.timeout.connect(self.refreshTimerTimeout)
 
+		self.startGameTimer = QTimer()
+		self.startGameTimer.timeout.connect(self.startGameTimerTimeout)
+
 		self.pauseTimer = QTimer()
 		self.pauseTimer.timeout.connect(self.pauseTimerTimeout)
 
@@ -152,11 +157,16 @@ class GUI(QWidget):
 		self.show()
 
 	def pushButtonPressed(self):
-		self.game.start()
-		self.text.setText(self.game.getWhatToDisplay())
+		self.text.setText("LEVEL %d" % (self.game.level+1))
 		self.pushButton.setDisabled(True)
 		self.pushButton.setVisible(False)
 		self.progressbar.setVisible(True)
+		self.startGameTimer.start(1000)
+
+	def startGameTimerTimeout(self):
+		self.startGameTimer.stop()
+		self.game.start()
+		self.text.setText(self.game.getWhatToDisplay())
 		self.refreshTimer.start(100)
 		self.blinkingState = False
 
@@ -168,10 +178,16 @@ class GUI(QWidget):
 			self.refreshTimer.start(100)
 			self.blinkingState = False
 		else:
-			self.text.setText("Finished!")
-			self.pushButton.setDisabled(False)
-			self.pushButton.setVisible(True)
-			self.progressbar.setVisible(False)
+			# next level ?
+			if self.game.level+1 < len(self.game.grantedTimeByLevels):
+				self.game.level+=1
+				self.pushButtonPressed()
+
+			else: # no more level
+				self.text.setText("Finished!")
+				self.pushButton.setDisabled(False)
+				self.pushButton.setVisible(True)
+				self.progressbar.setVisible(False)
 		self.text.setStyleSheet("");
 
 	def refreshTimerTimeout(self):
