@@ -108,7 +108,7 @@ class GUI(QWidget):
 			QSplitter::handle:vertical   { image: none; } \
 			QSplitter::handle:horizontal { width:  2px; image: none; } \
 			QPushButton { background-color: #404040; background: #404040; } \
-			QLabel#label { font-size: 30pt; } \
+			QLabel#label { font-size: 50pt; } \
 		");
 
 		layout = QVBoxLayout(self)
@@ -128,7 +128,7 @@ class GUI(QWidget):
 			return btn
 
 		self.text = mkQLabel('label', "Press Start", Qt.AlignCenter | Qt.AlignTop)
-		self.text.setMinimumSize(330, 20)
+		self.text.setMinimumSize(500, 100)
 		layout.addWidget(self.text)
 
 		self.progressbar = QProgressBar()
